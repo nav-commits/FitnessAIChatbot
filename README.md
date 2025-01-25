@@ -1,6 +1,6 @@
 # Fitness AI Chatbot 🤖🏋️
 
-A specialized AI chatbot designed to answer **fitness-related questions**. Built using modern web technologies like **Next.js**, **TypeScript**, **ShadCN UI**, **TailwindCSS**, and **Radix UI** for the frontend, with a **Flask backend** leveraging **OpenAI API** via **LangChain** for advanced AI capabilities.
+A specialized AI chatbot designed to answer **fitness-related questions**. Built using modern web technologies like **Next.js**, **TypeScript**,**TailwindCSS**, and **Radix UI** for the frontend, with a **Flask backend** leveraging **OpenAI API** via **LangChain** for advanced AI capabilities.
 
 ---
 
@@ -8,7 +8,7 @@ A specialized AI chatbot designed to answer **fitness-related questions**. Built
 - **Fitness-Focused**: Answers questions related to workouts, nutrition, and fitness routines.
 - **Modern Frontend**: Built with:
   - **Next.js** and **TypeScript** for performance and type safety.
-  - **ShadCN UI**, **TailwindCSS**, and **Radix UI** for a sleek and accessible design.
+  - **TailwindCSS**, and **Radix UI** for a sleek and accessible design.
 - **Smart Backend**: Powered by:
   - **Flask** as the backend server.
   - **OpenAI API** integrated with **LangChain** for custom AI behavior.
@@ -21,7 +21,6 @@ A specialized AI chatbot designed to answer **fitness-related questions**. Built
 ### Frontend:
 - **Next.js**
 - **TypeScript**
-- **ShadCN UI**
 - **TailwindCSS**
 - **Radix UI**
 
