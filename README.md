@@ -28,7 +28,7 @@ A specialized AI chatbot designed to answer **fitness-related questions**. Built
 - **Flask** (Python)
 - **OpenAI API**
 - **LangChain** (for prompt engineering and memory)
-
+- **Supabase database** (for storing messages)
 ---
 
 ## Installation & Setup 🚀
