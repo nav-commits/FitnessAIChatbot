@@ -1,6 +1,6 @@
 "use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Send, Bot, Menu, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -11,40 +11,52 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useTheme } from "next-themes";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import SidebarContent from "@/components/SidebarContent";
-import Link from "next/link";
-interface Message {
-  content: string;
-  role: "user" | "assistant";
-}
-
-export default function Home() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
+import { useTheme } from "next-themes";
+export default function Chat({ params }) {
+  const { id } = params;
+  const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [input, setInput] = useState("");
   const { setTheme } = useTheme();
+  useEffect(() => {
+    async function fetchMessages() {
+      setIsLoading(true);
+      try {
+        const res = await fetch(`http://localhost:5000/chat/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch messages");
+        const data = await res.json();
+        setMessages(data.messages);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      }
+      setIsLoading(false);
+    }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    fetchMessages();
+  }, [id]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    const userMessage = { content: input, role: "user" as const };
+    const userMessage = { content: input, role: "user" };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
+
     try {
       const response = await fetch("http://localhost:5000/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ input: input.trim() }),
+        body: JSON.stringify({ input: input.trim(), id: id }), // Send chatId from params
       });
 
       const data = await response.json();
-      const botMessage = { content: data.response, role: "assistant" as const };
+      const botMessage = { content: data.response, role: "assistant" };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       console.error("Error:", error);
@@ -76,7 +88,6 @@ export default function Home() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
         <header className="h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex items-center justify-between h-full px-4">
             <div className="flex items-center space-x-3">
@@ -108,7 +119,7 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Chat Container */}
+        {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto px-4 py-6">
           <div className="max-w-4xl mx-auto space-y-6">
             {messages.length === 0 ? (
