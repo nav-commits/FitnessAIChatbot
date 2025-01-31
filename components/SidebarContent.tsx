@@ -31,7 +31,7 @@ const SidebarContent: React.FC = () => {
   // Function to handle chat deletion
   const handleDeleteChat = async (chatId: number) => {
     try {
-      await fetch(`http://localhost:5000/chats/${chatId}`, { method: "DELETE" });
+      await fetch(`http://localhost:5000/chat/${chatId}`, { method: "DELETE" });
       setChats((prevChats) => prevChats.filter((chat) => chat.id !== chatId));
     } catch (err) {
       console.error("Error deleting chat:", err);
