@@ -122,5 +122,24 @@ def get_chat(chat_id):
     except Exception as e:
         return jsonify({"error": "Internal Server Error", "details": str(e)}), 500
 
+# Route to delete a specific chat
+@app.route("/chat/<int:chat_id>", methods=["DELETE"])
+@cross_origin(origin='localhost', headers=['Content-Type'])
+def delete_chat(chat_id):
+    try:
+        # Check if chat exists before deleting
+        response = supabase.table("chats").select("*").eq("id", chat_id).execute()
+
+        if not response.data:
+            return jsonify({"error": "Chat not found"}), 404
+
+        # Delete chat from Supabase
+        supabase.table("chats").delete().eq("id", chat_id).execute()
+
+        return jsonify({"message": "Chat deleted successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": "Internal Server Error", "details": str(e)}), 500
+
 if __name__ == "__main__":
     app.run(debug=True)

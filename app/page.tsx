@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { Send, Bot, Menu, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "next-themes";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import SidebarContent from "@/components/SidebarContent";
 import Link from "next/link";
 interface Message {
@@ -55,31 +55,25 @@ export default function Home() {
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden absolute top-4 left-4"
-          >
-            <Menu className="h-6 w-6" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-64">
-          <SidebarContent />
-        </SheetContent>
-      </Sheet>
-
       <div className="hidden md:flex w-64 flex-col bg-muted/50 border-r">
         <SidebarContent />
       </div>
-
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <header className="h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex items-center justify-between h-full px-4">
             <div className="flex items-center space-x-3">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-64">
+                  <SidebarContent />
+                </SheetContent>
+              </Sheet>
               <Bot className="w-8 h-8 text-primary" />
               <Link href="/">
                 {" "}
@@ -119,9 +113,9 @@ export default function Home() {
                 </p>
               </div>
             ) : (
-              messages.map((message, index) => (
+              messages.map((message) => (
                 <div
-                  key={index}
+                  key={message.content + message.role}
                   className={cn(
                     "flex items-start space-x-3",
                     message.role === "user" ? "justify-end" : "justify-start"
@@ -163,14 +157,14 @@ export default function Home() {
         </div>
 
         {/* Input Form */}
-        <div className="border-t bg-background p-4">
+        <div className="p-4">
           <div className="max-w-4xl mx-auto">
             <form onSubmit={handleSubmit} className="flex space-x-4">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Type your message..."
-                className="flex-1"
+                className="flex-1 p-6"
               />
               <Button type="submit" disabled={isLoading || !input.trim()}>
                 <Send className="w-5 h-5" />
