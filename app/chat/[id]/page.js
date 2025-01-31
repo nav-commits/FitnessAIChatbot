@@ -14,6 +14,8 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import SidebarContent from "@/components/SidebarContent";
 import { useTheme } from "next-themes";
+import PropTypes from 'prop-types';
+
 export default function Chat({ params }) {
   const { id } = params;
   const [messages, setMessages] = useState([]);
@@ -31,6 +33,12 @@ export default function Chat({ params }) {
       } catch (error) {
         console.error("Error fetching messages:", error);
       }
+      
+      Chat.propTypes = {
+        params: PropTypes.shape({
+          id: PropTypes.string.isRequired,
+        }).isRequired,
+      };
       setIsLoading(false);
     }
 

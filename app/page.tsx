@@ -119,9 +119,9 @@ export default function Home() {
                 </p>
               </div>
             ) : (
-              messages.map((message, index) => (
+              messages.map((message) => (
                 <div
-                  key={index}
+                  key={message.content + message.role}
                   className={cn(
                     "flex items-start space-x-3",
                     message.role === "user" ? "justify-end" : "justify-start"
