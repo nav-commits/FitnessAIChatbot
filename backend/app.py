@@ -11,13 +11,9 @@ from supabase import create_client, Client
 # Load environment variables
 load_dotenv()
 
-from flask import Flask
-from flask_cors import CORS
-
 app = Flask(__name__)
-
-# Enable CORS for all routes
 CORS(app)
+
 # Set up OpenAI API key
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
@@ -41,33 +37,37 @@ conversation = ConversationChain(
     memory=memory
 )
 
-
-app = Flask(__name__)
-
 # Supabase credentials
-# Get Supabase credentials
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
-
 
 # Create Supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_API_KEY)
 
+# Authentication Middleware
+def authenticate():
+    token = request.headers.get("Authorization")
+    if not token or not token.startswith("Bearer "):
+        return None
+    return token.split("Bearer ")[1]
+
 @app.route("/chat", methods=["POST"])
 @cross_origin(origin='localhost', headers=['Content-Type'])
 def chat():
+    token = authenticate()
+    if not token:
+        return jsonify({"error": "Unauthorized"}), 401
+    
     data = request.json
     user_input = data.get("input")
-    chat_id = data.get("id")  # Check if an ID is provided
+    chat_id = data.get("id")
 
     if not user_input:
         return jsonify({"error": "No input provided"}), 400
 
-    # Get response from LangChain model
     bot_response = conversation.predict(input=user_input)
 
     if chat_id:
-        # **Existing chat: Append new message**
         response = supabase.table("chats").select("messages").eq("id", chat_id).execute()
         
         if response.data:
@@ -76,7 +76,6 @@ def chat():
             chat_messages.append({"role": "user", "content": user_input})
             chat_messages.append({"role": "assistant", "content": bot_response})
 
-            # Update existing chat
             supabase.table("chats").update({"messages": chat_messages}).eq("id", chat_id).execute()
             return jsonify({"response": bot_response, "id": chat_id})
 
@@ -84,8 +83,7 @@ def chat():
             return jsonify({"error": "Chat not found"}), 404
 
     else:
-        # **New chat: Create a new entry**
-        chat_name = "Chat " + str(int(os.urandom(2).hex(), 16))  # Generate a random chat name
+        chat_name = "Chat " + str(int(os.urandom(2).hex(), 16))
         new_chat = {
             "name": chat_name,
             "messages": [
@@ -93,24 +91,29 @@ def chat():
                 {"role": "assistant", "content": bot_response}
             ]
         }
-
-        # Insert into Supabase
+        
         response = supabase.table("chats").insert(new_chat).execute()
-        chat_id = response.data[0]["id"]  # Get the generated chat ID
+        chat_id = response.data[0]["id"]
 
         return jsonify({"response": bot_response, "id": chat_id})
 
-# Route to fetch all previous chats
 @app.route("/chats", methods=["GET"])
 @cross_origin(origin='localhost', headers=['Content-Type'])
 def get_chats():
+    token = authenticate()
+    if not token:
+        return jsonify({"error": "Unauthorized"}), 401
+    
     chats = supabase.table("chats").select("*").execute()
     return jsonify(chats.data)
 
-# Route to fetch a specific chat
 @app.route("/chat/<int:chat_id>", methods=["GET"])
 @cross_origin(origin='localhost', headers=['Content-Type'])
 def get_chat(chat_id):
+    token = authenticate()
+    if not token:
+        return jsonify({"error": "Unauthorized"}), 401
+    
     try:
         response = supabase.table("chats").select("*").eq("id", chat_id).execute()
 
@@ -118,26 +121,23 @@ def get_chat(chat_id):
             return jsonify(response.data[0]), 200
         else:
             return jsonify({"error": "Chat not found"}), 404
-
     except Exception as e:
         return jsonify({"error": "Internal Server Error", "details": str(e)}), 500
 
-# Route to delete a specific chat
 @app.route("/chat/<int:chat_id>", methods=["DELETE"])
 @cross_origin(origin='localhost', headers=['Content-Type'])
 def delete_chat(chat_id):
+    token = authenticate()
+    if not token:
+        return jsonify({"error": "Unauthorized"}), 401
+    
     try:
-        # Check if chat exists before deleting
         response = supabase.table("chats").select("*").eq("id", chat_id).execute()
-
         if not response.data:
             return jsonify({"error": "Chat not found"}), 404
-
-        # Delete chat from Supabase
+        
         supabase.table("chats").delete().eq("id", chat_id).execute()
-
         return jsonify({"message": "Chat deleted successfully"}), 200
-
     except Exception as e:
         return jsonify({"error": "Internal Server Error", "details": str(e)}), 500
 

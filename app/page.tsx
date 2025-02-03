@@ -1,8 +1,9 @@
 "use client";
 
+import { useSession, signIn, signOut } from "next-auth/react";
 import { useState } from "react";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
-import { Send, Bot, Menu, Sun, Moon } from "lucide-react";
+import { Send, Bot, Menu, Sun, Moon, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,17 +16,37 @@ import {
 import { useTheme } from "next-themes";
 import SidebarContent from "@/components/SidebarContent";
 import Link from "next/link";
+
 interface Message {
   content: string;
   role: "user" | "assistant";
 }
 
 export default function Home() {
+  const { data: session, status } = useSession();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { setTheme } = useTheme();
 
+  // If still loading, show nothing
+  if (status === "loading") {
+    return <p className="text-center mt-20">Loading...</p>;
+  }
+
+  // Redirect to login if not authenticated
+  if (!session) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">
+            Welcome to Fitness AI Assistant
+          </h1>
+          <Button onClick={() => signIn("google")}>Sign in with Google</Button>
+        </div>
+      </div>
+    );
+  }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -39,8 +60,11 @@ export default function Home() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.user?.token}`, // Add token here
         },
-        body: JSON.stringify({ input: input.trim() }),
+        body: JSON.stringify({
+          input: input.trim(),
+        }),
       });
 
       const data = await response.json();
@@ -52,16 +76,18 @@ export default function Home() {
       setIsLoading(false);
     }
   };
+ console.log(session?.user?.token); 
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <div className="hidden md:flex w-64 flex-col bg-muted/50 border-r">
+      <div className="hidden md:flex flex-col bg-muted/50 border-r">
         <SidebarContent />
       </div>
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className="h-16 border-b bg-background/95 backdrop-blur">
           <div className="flex items-center justify-between h-full px-4">
             <div className="flex items-center space-x-3">
               <Sheet>
@@ -76,29 +102,38 @@ export default function Home() {
               </Sheet>
               <Bot className="w-8 h-8 text-primary" />
               <Link href="/">
-                {" "}
                 <h1 className="text-xl font-semibold">Fitness AI Assistant</h1>
               </Link>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                  <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setTheme("light")}>
-                  Light
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")}>
-                  Dark
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("system")}>
-                  System
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+
+            {/* Theme Toggle and Sign Out */}
+            <div className="flex items-center space-x-4">
+              {/* Theme Toggle */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                    <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setTheme("light")}>
+                    Light
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme("dark")}>
+                    Dark
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme("system")}>
+                    System
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Sign Out Button */}
+              <Button variant="ghost" size="icon" onClick={() => signOut()}>
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </header>
 
