@@ -62,7 +62,9 @@ export default function Home() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session?.user?.token}`, // Add token here
         },
-        body: JSON.stringify({ input: input.trim() }),
+        body: JSON.stringify({
+          input: input.trim(),
+        }),
       });
 
       const data = await response.json();
@@ -74,7 +76,7 @@ export default function Home() {
       setIsLoading(false);
     }
   };
-
+ console.log(session?.user?.token); 
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}

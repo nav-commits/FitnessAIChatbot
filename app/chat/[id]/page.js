@@ -15,8 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import SidebarContent from "@/components/SidebarContent";
 import { useTheme } from "next-themes";
-import { useSession } from "next-auth/react";
-import { signOut } from "next-auth/react";
+import { signOut, signIn, useSession } from "next-auth/react";
 
 export default function Chat({ params }) {
   const { id } = params;
@@ -24,8 +23,9 @@ export default function Chat({ params }) {
   const [isLoading, setIsLoading] = useState(false);
   const [input, setInput] = useState("");
   const { setTheme } = useTheme();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
+  
   useEffect(() => {
     async function fetchMessages() {
       setIsLoading(true);
@@ -47,6 +47,24 @@ export default function Chat({ params }) {
     if (session) fetchMessages();
   }, [id, session]);
 
+    // If still loading, show nothing
+    if (status === "loading") {
+      return <p className="text-center mt-20">Loading...</p>;
+    }
+  
+    // Redirect to login if not authenticated
+    if (!session) {
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">
+              Welcome to Fitness AI Assistant
+            </h1>
+            <Button onClick={() => signIn("google")}>Sign in with Google</Button>
+          </div>
+        </div>
+      );
+    }
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
